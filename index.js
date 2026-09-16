@@ -193,7 +193,7 @@ this.handlePreviewSwipeGesture = this.handlePreviewSwipeGesture.bind(this);
         }
 
         try {
-            const settingsHtml = await context.renderExtensionTemplateAsync('third-party/swipe-archiver', 'settings');
+            const settingsHtml = await context.renderExtensionTemplateAsync('third-party/sillytavern-swipe-archiver', 'settings');
             if (this.disposed || document.getElementById(SETTINGS_PANEL_ID) || !container.isConnected) {
                 return;
             }
