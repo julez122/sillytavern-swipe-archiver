@@ -53,13 +53,16 @@ class SwipeArchiver {
         this.settingsInput = null;
         this.disposed = false;
         this.handleControlClick = this.handleControlClick.bind(this);
-        this.handleEnabledInputChange = this.handleEnabledInputChange.bind(this);
+this.handleEnabledInputChange = this.handleEnabledInputChange.bind(this);
+this.handlePreviewSwipeGesture = this.handlePreviewSwipeGesture.bind(this);
     }
 
     initialize() {
-        document.addEventListener('click', this.handleControlClick, true);
+    document.addEventListener('click', this.handleControlClick, true);
+    document.addEventListener('swiped-left', this.handlePreviewSwipeGesture, true);
+    document.addEventListener('swiped-right', this.handlePreviewSwipeGesture, true);
 
-        const context = getContext();
+    const context = getContext();
         this.getSettings();
         this.bindEvent(context.eventTypes.APP_READY, () => void this.mountSettingsPanel());
         void this.mountSettingsPanel();
@@ -98,9 +101,11 @@ class SwipeArchiver {
     }
 
     dispose() {
-        this.disposed = true;
-        document.removeEventListener('click', this.handleControlClick, true);
-        this.chatObserver?.disconnect();
+    this.disposed = true;
+    document.removeEventListener('click', this.handleControlClick, true);
+    document.removeEventListener('swiped-left', this.handlePreviewSwipeGesture, true);
+    document.removeEventListener('swiped-right', this.handlePreviewSwipeGesture, true);
+    this.chatObserver?.disconnect();
         this.chatObserver = null;
         this.observedChat = null;
         this.lastKnownMessageNodes.clear();
@@ -648,7 +653,27 @@ class SwipeArchiver {
         counter.textContent = `${previewIndex + 1}/${total}`;
         return counter;
     }
+/**
+ * Blocks SillyTavern's native horizontal swipe gesture while any historical
+ * swipe preview is open. This prevents a phone gesture from swiping the
+ * latest assistant message while the user is inspecting an older message.
+ *
+ * @param {CustomEvent} event
+ */
+handlePreviewSwipeGesture(event) {
+    if (!this.isEnabled() || this.previewStates.size === 0) {
+        return;
+    }
 
+    const target = event.target instanceof Element ? event.target : null;
+
+    if (!target?.closest('#chat')) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+}
     /**
      * Capture-phase delegation guarantees a custom preview button cannot bubble
      * into SillyTavern's normal swipe handlers on the same document.
