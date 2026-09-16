@@ -1,0 +1,117 @@
+/* Keeps the extension footer in the normal message content flow for Ripple and other chat styles. */
+#chat .mes .swipe-archiver__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45em;
+    min-width: 0;
+    margin-block-start: 0.35em;
+}
+
+/* Hides only the affected message's core swipe controls while its read-only preview row is active. */
+#chat .mes.swipe-archiver--previewing .swipe_right,
+#chat .mes.swipe-archiver--previewing .swipe_left,
+#chat .mes.swipe-archiver--previewing .swipes-counter {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Keeps every extension control compact, theme-inheriting, and comfortable for touch input. */
+#chat .mes .swipe-archiver__footer .menu_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3em;
+    min-inline-size: 2.1rem;
+    min-block-size: 2.1rem;
+    margin: 0;
+    padding-inline: 0.4em;
+    white-space: nowrap;
+}
+
+/* Keeps the normal eye-only button visually proportional to native message controls. */
+#chat .mes .swipe-archiver__open {
+    min-inline-size: auto;    
+}
+
+#chat .mes .swipe-archiver__open > i.fa-eye {
+    font-size: 12px !important;
+    transform: translateY(2px);
+}
+
+/* Keeps the eye outside the visible native swipe counter when historical swipe counters are enabled. */
+body.swipeAllMessages #chat .mes.swipe-archiver--managed:not(.swipe-archiver--previewing) .swipe-archiver__footer {
+    padding-inline-end: calc(40px + 0.55em);
+}
+
+/* Makes preview arrows, close, and eye controls icon-only while preserving their full touch targets. */
+#chat .mes .swipe-archiver__arrow,
+#chat .mes .swipe-archiver__close,
+#chat .mes .swipe-archiver__open {
+    border: 0;
+    background: transparent;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Keeps icon-only controls box-free during pointer interaction without removing native disabled styling. */
+#chat .mes .swipe-archiver__arrow:not(:disabled):is(:hover, :active),
+#chat .mes .swipe-archiver__close:not(:disabled):is(:hover, :active),
+#chat .mes .swipe-archiver__open:not(:disabled):is(:hover, :active) {
+    border: 0;
+    background: transparent;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    border-radius: 0;
+    box-shadow: none;
+    opacity: 0.72;
+}
+
+/* Prevents the preview count from stretching the compact action row. */
+#chat .mes .swipe-archiver__preview-count {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+/* Makes the explicit branch action compact enough to remain in one row on narrow message columns. */
+#chat .mes .swipe-archiver__branch {
+    min-inline-size: 0;
+    font-size: 0.82em;
+}
+
+/* Preserves visible keyboard focus using the active SillyTavern theme color rather than a hardcoded color. */
+#chat .mes .swipe-archiver__footer .menu_button:focus-visible {
+    outline: 2px solid var(--SmartThemeQuoteColor, currentColor);
+    outline-offset: 2px;
+}
+
+/* Tightens only the extension row at phone widths while retaining its single horizontal layout. */
+@media (max-width: 420px) {
+    /* Retains visibly separate controls at phone widths while keeping the preview row compact. */
+    #chat .mes .swipe-archiver__footer {
+        gap: 0.35em;
+    }
+
+    /* Keeps the historical eye clear of Moonlit's wider native counter on phone widths. */
+    body.swipeAllMessages #chat .mes.swipe-archiver--managed:not(.swipe-archiver--previewing) .swipe-archiver__footer {
+        padding-inline-end: calc(40px + 0.45em);
+    }
+
+    /* Keeps arrow and close targets usable without forcing a horizontal page overflow on 390px layouts. */
+    #chat .mes .swipe-archiver__footer .menu_button {
+        min-inline-size: 1.95rem;
+        min-block-size: 1.95rem;
+        padding-inline: 0.3em;
+    }
+
+    /* Keeps the branch button's label readable while fitting beside the preview counter. */
+    #chat .mes .swipe-archiver__branch {
+        font-size: 0.60em;
+        padding-block: 1px !important;
+        min-height: 22px !important;
+        line-height: 1.1 !important;
+    }
+}
