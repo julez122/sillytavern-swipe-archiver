@@ -1,10 +1,20 @@
 # Swipe Archiver
 
 <p align="center">
-<a href="https://ibb.co/JFG9QcW1"><img src="https://i.ibb.co/wrPfsdZk/swipe-archiver-logo.png" alt="swipe archiver logo" border="0" width="50%"></a>
+<a href="https://ibb.co/JFG9QcW1"><img src="https://i.ibb.co/wrPfsdZk/swipe-archiver-logo.png" alt="swipe archiver logo" border="0" width="25%"></a>
 </p>
 
 Swipe Archiver is a [SillyTavern](https://github.com/sillytavern/SillyTavern) UI extension for inspecting stored swipes on earlier assistant messages without changing the selected swipe or saving the source chat.
+
+## Table of Contents
+
+- [Features](#features)
+- [Data-safety](#data-safety)
+- [Installation](#installation)
+  * [SillyTavern](#sillytavern)
+  * [Manual](#manual)
+- [Usage](#usage)
+- [Compatibility](#compatibility)
 
 ## Features
 
@@ -22,28 +32,27 @@ Swipe Archiver is a [SillyTavern](https://github.com/sillytavern/SillyTavern) UI
 
 > [!IMPORTANT]
 > Previewing never writes to a live SillyTavern message object. In particular, it does not change `mes`, `swipe_id`, `swipes`, `swipe_info`, `extra`, chat metadata, the JSONL source file, or any normal swipe/generation/checkpoint path. The only persisted extension preference is the user-global `extensionSettings.swipe_archiver.enabled` flag; it controls whether extension-owned controls are rendered and never touches chat data.
-
-> [!IMPORTANT]
+> 
 > `Create Branch` is the sole persistent action. It builds a clone-only snapshot through the selected message, synchronizes the previewed swipe on that clone, saves the new branch, copies SillyTavern's itemized-prompt data when applicable, and opens the branch. It intentionally does not call SillyTavern's `branchChat()` helper because that helper records the new name in `sourceMessage.extra.branches`.
 
 ## Installation
 
 ### SillyTavern
 
-Simply install it in SillyTavern by pasting the repo link.
+Simply install it in SillyTavern by pasting the repo link: `https://github.com/julez122/sillytavern-swipe-archiver.git`.
 
 ### Manual
 
 Clone the repo with `git clone` and then place it in your `default-user/extensions` folder
 
 ```bash
-git clone
+git clone https://github.com/julez122/sillytavern-swipe-archiver.git
 ```
 
 ## Usage
 
 <p align="center">
-<a href="https://ibb.co/tMkTRmLb"><img src="https://i.ibb.co/4Z9nkm1j/swipe-archiver.gif" alt="swipe archiver" border="0" width="80%"></a>
+<a href="https://ibb.co/tMkTRmLb"><img src="https://i.ibb.co/4Z9nkm1j/swipe-archiver.gif" alt="swipe archiver" border="0" width="50%"></a>
 </p>
 
 1. Ensure the extension is enabled in the extensions drawer. If it isn't, enable it with the checkbox.
