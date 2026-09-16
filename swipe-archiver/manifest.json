@@ -1,0 +1,12 @@
+{
+  "display_name": "Swipe Archiver",
+  "description": "Non-destructively preview stored swipes on historical assistant messages and explicitly branch from one.",
+  "loading_order": 100,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "Julia",
+  "version": "1.0.0",
+  "license": "MIT"
+}
