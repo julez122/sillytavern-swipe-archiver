@@ -14,6 +14,10 @@ import {
 const EXTENSION_KEY = '__swipeArchiverExtension';
 const FOOTER_SELECTOR = '.swipe-archiver__footer';
 const ACTION_SELECTOR = '[data-swipe-archiver-action]';
+const SETTINGS_KEY = 'swipe_archiver';
+const SETTINGS_PANEL_ID = 'swipe-archiver-settings';
+const ENABLE_INPUT_ID = 'swipe-archiver-enabled';
+const DEFAULT_SETTINGS = Object.freeze({ enabled: true });
 
 /**
  * Keeps Swipe Archiver limited to historical assistant messages. The current
@@ -45,13 +49,20 @@ class SwipeArchiver {
         this.lastKnownMessageNodes = new Set();
         this.reconcileQueued = false;
         this.boundListeners = [];
+        this.settingsPanel = null;
+        this.settingsInput = null;
+        this.disposed = false;
         this.handleControlClick = this.handleControlClick.bind(this);
+        this.handleEnabledInputChange = this.handleEnabledInputChange.bind(this);
     }
 
     initialize() {
         document.addEventListener('click', this.handleControlClick, true);
 
         const context = getContext();
+        this.getSettings();
+        this.bindEvent(context.eventTypes.APP_READY, () => void this.mountSettingsPanel());
+        void this.mountSettingsPanel();
         this.bindEvent(context.eventTypes.CHAT_CHANGED, () => {
             this.clearPreviewStates();
             this.scheduleReconcile();
@@ -87,11 +98,13 @@ class SwipeArchiver {
     }
 
     dispose() {
+        this.disposed = true;
         document.removeEventListener('click', this.handleControlClick, true);
         this.chatObserver?.disconnect();
         this.chatObserver = null;
         this.observedChat = null;
         this.lastKnownMessageNodes.clear();
+        this.removeSettingsPanel();
 
         const context = getContext();
         for (const [eventType, handler] of this.boundListeners) {
@@ -115,6 +128,150 @@ class SwipeArchiver {
         const context = getContext();
         context.eventSource.on(eventType, handler);
         this.boundListeners.push([eventType, handler]);
+    }
+
+    /**
+     * Gets the extension-owned, global preference while preserving unrelated
+     * fields. This controls only the extension's DOM behavior, never chat
+     * data or message state.
+     *
+     * @returns {{enabled: boolean, [key: string]: unknown}}
+     */
+    getSettings() {
+        const context = getContext();
+        const settingsStore = context.extensionSettings;
+        if (!settingsStore || typeof settingsStore !== 'object') {
+            return { ...DEFAULT_SETTINGS };
+        }
+
+        let settings = settingsStore[SETTINGS_KEY];
+        if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+            settings = { ...DEFAULT_SETTINGS };
+            settingsStore[SETTINGS_KEY] = settings;
+        }
+
+        if (typeof settings.enabled !== 'boolean') {
+            settings.enabled = DEFAULT_SETTINGS.enabled;
+        }
+
+        return settings;
+    }
+
+    /**
+     * @returns {boolean}
+     */
+    isEnabled() {
+        return this.getSettings().enabled;
+    }
+
+    /**
+     * Mounts one native SillyTavern inline drawer. Its content begins hidden
+     * through the platform's .inline-drawer-content rule, so it is closed by
+     * default without adding custom collapse styling.
+     */
+    async mountSettingsPanel() {
+        if (this.disposed) {
+            return;
+        }
+
+        const existingPanel = document.getElementById(SETTINGS_PANEL_ID);
+        if (existingPanel) {
+            this.settingsPanel = existingPanel;
+            this.bindSettingsInput(existingPanel);
+            return;
+        }
+
+        const context = getContext();
+        const container = document.querySelector('#extensions_settings2');
+        if (!container || typeof context.renderExtensionTemplateAsync !== 'function') {
+            return;
+        }
+
+        try {
+            const settingsHtml = await context.renderExtensionTemplateAsync('third-party/swipe-archiver', 'settings');
+            if (this.disposed || document.getElementById(SETTINGS_PANEL_ID) || !container.isConnected) {
+                return;
+            }
+
+            container.insertAdjacentHTML('beforeend', settingsHtml);
+            const settingsPanel = document.getElementById(SETTINGS_PANEL_ID);
+            if (!settingsPanel) {
+                throw new Error('The settings template did not contain its root element.');
+            }
+
+            this.settingsPanel = settingsPanel;
+            this.bindSettingsInput(settingsPanel);
+        } catch (error) {
+            console.error('[Swipe Archiver] Settings panel could not be mounted.', error);
+        }
+    }
+
+    /**
+     * @param {HTMLElement} settingsPanel
+     */
+    bindSettingsInput(settingsPanel) {
+        const input = settingsPanel.querySelector(`#${ENABLE_INPUT_ID}`);
+        if (!(input instanceof HTMLInputElement)) {
+            return;
+        }
+
+        this.settingsInput?.removeEventListener('change', this.handleEnabledInputChange);
+        this.settingsInput = input;
+        input.removeEventListener('change', this.handleEnabledInputChange);
+        input.addEventListener('change', this.handleEnabledInputChange);
+        input.checked = this.isEnabled();
+    }
+
+    /**
+     * @param {Event} event
+     */
+    handleEnabledInputChange(event) {
+        const input = event.currentTarget;
+        if (!(input instanceof HTMLInputElement)) {
+            return;
+        }
+
+        const nextEnabled = input.checked;
+        prunePreviewStates(this.previewStates, getContext().chat);
+        if (!nextEnabled && this.previewStates.size > 0) {
+            input.checked = true;
+            this.notify('warning', 'Close the active swipe preview before disabling Swipe Archiver.', 'Swipe Archiver');
+            return;
+        }
+
+        const settings = this.getSettings();
+        if (settings.enabled === nextEnabled) {
+            return;
+        }
+
+        settings.enabled = nextEnabled;
+        getContext().saveSettingsDebounced?.();
+        if (nextEnabled) {
+            this.scheduleReconcile();
+        } else {
+            this.removeRenderedControls();
+        }
+    }
+
+    /**
+     * Removes only extension-owned DOM when the feature is turned off. It
+     * cannot write, save, or otherwise alter any chat or message object.
+     */
+    removeRenderedControls() {
+        for (const messageElement of document.querySelectorAll('#chat .mes')) {
+            messageElement.querySelector(FOOTER_SELECTOR)?.remove();
+            messageElement.classList.remove('swipe-archiver--managed', 'swipe-archiver--previewing');
+        }
+    }
+
+    /**
+     * Removes the panel and its direct listener during an idempotent reload.
+     */
+    removeSettingsPanel() {
+        this.settingsInput?.removeEventListener('change', this.handleEnabledInputChange);
+        this.settingsInput = null;
+        this.settingsPanel?.remove();
+        this.settingsPanel = null;
     }
 
     /**
@@ -175,6 +332,11 @@ class SwipeArchiver {
      */
     reconcile() {
         this.observeChatDom();
+        if (!this.isEnabled()) {
+            this.removeRenderedControls();
+            return;
+        }
+
         const context = getContext();
         const chat = context.chat;
         prunePreviewStates(this.previewStates, chat);
@@ -377,7 +539,7 @@ class SwipeArchiver {
     renderFooter(messageElement, message, messageId) {
         messageElement.querySelector(FOOTER_SELECTOR)?.remove();
 
-        if (!isHistoricalPreviewTarget(messageElement, message)) {
+        if (!this.isEnabled() || !isHistoricalPreviewTarget(messageElement, message)) {
             messageElement.classList.remove('swipe-archiver--managed', 'swipe-archiver--previewing');
             return;
         }
@@ -519,7 +681,7 @@ class SwipeArchiver {
         const context = getContext();
         const message = context.chat[messageId];
         const messageElement = this.getMessageElement(messageId);
-        if (!message || !messageElement || !isHistoricalPreviewTarget(messageElement, message)) {
+        if (!this.isEnabled() || !message || !messageElement || !isHistoricalPreviewTarget(messageElement, message)) {
             if (message && this.previewStates.has(message)) {
                 this.exitPreview(message, { restore: true });
             }
@@ -572,7 +734,7 @@ class SwipeArchiver {
      * @param {number} messageId
      */
     enterPreview(message, messageElement, messageId) {
-        if (!isHistoricalPreviewTarget(messageElement, message)) {
+        if (!this.isEnabled() || !isHistoricalPreviewTarget(messageElement, message)) {
             return;
         }
 

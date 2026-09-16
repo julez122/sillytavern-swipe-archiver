@@ -22,6 +22,7 @@ swipe-archiver/
 ├── index.js                      UI, lifecycle, clone rendering, and branch persistence
 ├── core.js                       Pure clone/eligibility/snapshot/name helpers
 ├── style.css                     Scoped mobile-first theme-inheriting styles
+├── settings.html                 Native extension-drawer template
 ├── package.json                  ESM configuration for deterministic tests
 └── tests/core.test.mjs           Projection, branch, malformed-data, and stale-state tests
 SillyTavern/                      Supplied release checkout and local runtime data; do not edit core
@@ -38,6 +39,8 @@ SillyTavern-MoonlitEchoesTheme/   Supplied theme source; do not edit it for this
 - Preview projection formats text with SillyTavern's formatter, including the safe transient formatter ID for message `0`; it rebuilds reasoning and media only from a clone.
 - Native core swipe handling stays untouched. The extension suppresses only its own capture-phase clicks and hides the affected message's visual core arrow while a preview is active.
 - The explicit `Create Branch` flow writes a cloned history snapshot through the selected message. Character branches use the native `/api/chats/save` request shape without `saveChat()`'s live character mutation. Group branches use the group save endpoint and persist the group branch registry after the cloned save succeeds.
+- The native extension menu contains one closed-by-default `Swipe Archiver` inline drawer with an `Enable Swipe Archiver` checkbox. The user-global `extensionSettings.swipe_archiver.enabled` preference defaults to `true`; no preview or chat state is persisted there.
+- Disabling removes only extension-owned DOM. It is blocked while `previewStates` is nonempty, restores the checkbox to checked, and emits a native `toastr.warning` headed `Swipe Archiver`.
 
 ## 4. Important implementation or workflow details
 
@@ -51,10 +54,13 @@ The extension listens to `CHAT_CHANGED`, render, swipe, edit, update, deletion, 
 
 Branch metadata is cloned from the active chat metadata and adds `main_chat` plus a new integrity UUID. Do not use `branchChat()` or `createBranch()` from `bookmarks.js`: they append to `lastMes.extra.branches`, which would mutate the source chat. `saveItemizedPrompts(branchName)` follows a successful branch save before the new branch opens.
 
+`settings.html` is mounted into `#extensions_settings2` with `renderExtensionTemplateAsync('third-party/swipe-archiver', 'settings')`. It intentionally reuses SillyTavern's `inline-drawer`, `inline-drawer-toggle`, `inline-drawer-content`, and `fa-circle-chevron-down` classes rather than adding extension CSS. The core drawer starts closed through the platform's native stylesheet; the extension listens only to its checkbox's `change` event.
+
 ## 5. Project-specific rules and constraints
 
 - Do not edit files inside `SillyTavern/` or `SillyTavern-MoonlitEchoesTheme/` for this feature.
 - Previewing must not change the source message's `mes`, `swipe_id`, `swipes`, `swipe_info`, `extra`, metadata, ordering, JSONL file, save state, generation state, checkpoint state, or core events.
+- The allowed global preference is `extensionSettings.swipe_archiver.enabled`; it must never be stored in a chat, message, branch, or JSONL payload.
 - Do not implement preview by temporarily selecting a swipe in the live chat object.
 - Keep all UI inside the original `.mes_block`, scoped under `swipe-archiver__*`, native-looking, mobile-first, and compatible with Moonlit Echoes Ripple plus Rectangle avatars.
 - Every CSS rule in `style.css` needs an explanatory comment. Use theme variables; do not hardcode theme colors or fonts.
@@ -68,6 +74,8 @@ Static validation passed: manifest parsing, `node --check` for `index.js` and `c
 
 One intentional test artifact exists: `Seraphina - 2023-5-12 @21h 32m 29s 224ms - Branch #1.jsonl`. It was created from noncanonical swipe 3 and opens with that swipe selected; the original JSONL and its source-message metadata stayed unchanged. The final UI refinement leaves the active/latest assistant message wholly native (its original arrows and counter remain); a historical message keeps its original `4/4` counter with a separate bare eye beside it, and preview shows the compact bare-chevron/close row plus the compact native-looking `Create Branch` button. These states were rechecked at 390px with Ripple and Rectangle avatars. No model/API call was made. No physical-device test has been performed.
 
+The native drawer and checkbox were added after that original validation. In the running local SillyTavern instance, the drawer mounted in `#extensions_settings2`, began closed with the native down-chevron, and opened with the native up-chevron and checked control. Disabling outside preview removed only the eye/footer while preserving the original `4/4` and current-message native counter; the setting survived a reload. During preview, an attempt to uncheck immediately restored the check state and showed the native yellow `Swipe Archiver` warning toast. At a 390px viewport, both closed and open drawer states fit within the viewport with no horizontal overflow. The source fixture hash remained `526B5914727D7B4C396B29B211C85A853FB34F79E4806C2031BDBC797E52EF4F` after the settings validation. The final interactive state is enabled, preview closed, and the extensions drawer closed.
+
 ## 7. Recommended testing or verification workflow
 
 From this workspace root, run `node --check swipe-archiver/index.js`, `node --check swipe-archiver/core.js`, and `node --test swipe-archiver/tests/core.test.mjs`.
@@ -75,3 +83,5 @@ From this workspace root, run `node --check swipe-archiver/index.js`, `node --ch
 Validate the manifest with PowerShell `Get-Content -Raw swipe-archiver/manifest.json | ConvertFrom-Json`. Confirm `git -C SillyTavern status --short` remains clean and that the Moonlit worktree's pre-existing changes remain untouched.
 
 For browser verification, use the already-running local server and open the supplied Seraphina chat. Hash the source JSONL before and after preview navigation. Verify the one eligible historical assistant message exposes a separate eye beside the original `4/4` counter, navigation changes only rendered DOM, close restores the original `4/4`, no save/generation/`MESSAGE_SWIPED` event occurs, and a 390px Ripple + Rectangle viewport has no horizontal overflow. Verify a last assistant message exposes only SillyTavern's native arrows and counter, with no Swipe Archiver eye. Separately create one noncanonical-swipe branch and compare the source message plus JSONL hash before/after; distinguish that intentional new branch artifact from the untouched source chat.
+
+For the global enable control, open the native extensions drawer and verify Swipe Archiver's own inline drawer starts closed. Open it to verify the native up-chevron and a checked `Enable Swipe Archiver` control. Outside preview, disabling must remove only Swipe Archiver DOM and persist across a reload; re-enabling must restore the historical eye. During an active preview, unchecking must leave the checkbox checked and show the native yellow warning toast without closing or altering the preview. Leave the extension enabled and all drawers closed after testing.
