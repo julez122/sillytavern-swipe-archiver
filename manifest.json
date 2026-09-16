@@ -6,7 +6,8 @@
   "optional": [],
   "js": "index.js",
   "css": "style.css",
-  "author": "Julia",
-  "version": "1.1.0",
+  "author": "julez122",
+  "homePage": "https://github.com/julez122/sillytavern-swipe-archiver"
+  "version": "1.0.2",
   "license": "MIT"
 }
