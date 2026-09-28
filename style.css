@@ -36,7 +36,7 @@
 
 #chat .mes .swipe-archiver__open > i.fa-eye {
     font-size: 12px !important;
-    transform: translateY(2px);
+    transform: translate(15px, 2px) !important;
 }
 
 /* Keeps the eye outside the visible native swipe counter when historical swipe counters are enabled. */
