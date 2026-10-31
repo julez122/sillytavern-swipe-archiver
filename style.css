@@ -34,9 +34,20 @@
     min-inline-size: auto;    
 }
 
-#chat .mes .swipe-archiver__open > i.fa-eye {
-    font-size: 12px !important;
-    transform: translate(15px, 2px) !important;
+/* Keeps the eye at the same height on mobile as the swipes counter and matches the color of the swipes counter */
+@media (max-width: 1000px) {
+    #chat .mes .swipe-archiver__open > i.fa-eye {
+        font-size: 12px !important;
+        transform: translate(10px, -5px) !important;
+        opacity: 0.8;
+    }
+}
+
+/* Hover and active give the eye a lighter color and sets its opacity to normal */
+#chat .mes .swipe-archiver__open > i.fa-eye:active,
+#chat .mes .swipe-archiver__open > i.fa-eye:hover {
+    color: var(--SmartThemeUnderlineColor);
+    opacity: 1;
 }
 
 /* Keeps the eye outside the visible native swipe counter when historical swipe counters are enabled. */
@@ -102,9 +113,9 @@ body.swipeAllMessages #chat .mes.swipe-archiver--managed:not(.swipe-archiver--pr
 
     /* Keeps arrow and close targets usable without forcing a horizontal page overflow on 390px layouts. */
     #chat .mes .swipe-archiver__footer .menu_button {
-        min-inline-size: 1.95rem;
-        min-block-size: 1.95rem;
-        padding-inline: 0.3em;
+        min-inline-size: 1rem;
+        min-block-size: 0.95rem;
+        padding-inline: 0.5em;
     }
 
     /* Keeps the branch button's label readable while fitting beside the preview counter. */
