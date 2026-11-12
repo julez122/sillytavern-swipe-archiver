@@ -6,8 +6,9 @@
         </div>
         <div class="inline-drawer-content">
             <span style="font-size: 10px; margin-bottom: 12px; display: block; text-align: center; opacity: 0.7;">Enable to view previous swipes of a chat.</span>
-            <label class="checkbox_label" for="swipe-archiver-enabled" style="padding-bottom: 0px;border-top: 1px solid var(--SmartThemeBorderColor); padding-top: 10px; column-gap: 1px;"></label>
-                <input id="swipe-archiver-enabled" type="checkbox" />
+            <label class="checkbox_label" for="swipe-archiver-enabled" style="padding-bottom: 0px;border-top: 1px solid var(--SmartThemeBorderColor); padding-top: 15px; column-gap: 1px;"></label>
+            <!-- The following styles on the checkbox input ensure it is aligned properly with the label text. Deleting them causes the checkbox to be placed above the <span> label text. -->
+                <input id="swipe-archiver-enabled" type="checkbox" style="display: inline-flex;align-items: center; margin-right: 5px;" />
                 <span data-i18n="Enable Swipe Archiver">Enable Swipe Archiver</span>
             </label>
         </div>
