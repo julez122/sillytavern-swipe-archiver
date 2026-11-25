@@ -77,7 +77,8 @@ body.swipeAllMessages #chat .mes.swipe-archiver--managed:not(.swipe-archiver--pr
     border-color: transparent !important;
     border-radius: 0;
     box-shadow: none;
-    opacity: 0.72;
+    opacity: 1;
+    filter: brightness(1.2) !important;
 }
 
 /* Prevents the preview count from stretching the compact action row. */
@@ -104,6 +105,7 @@ body.swipeAllMessages #chat .mes.swipe-archiver--managed:not(.swipe-archiver--pr
     /* Retains visibly separate controls at phone widths while keeping the preview row compact. */
     #chat .mes .swipe-archiver__footer {
         gap: 0.35em;
+        margin-block-start: 0em;
     }
 
     /* Keeps the historical eye clear of Moonlit's wider native counter on phone widths. */
